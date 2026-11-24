@@ -1,0 +1,35 @@
+[project]
+name = "predictive-maintenance-ml-vs-llm"
+version = "0.1.0"
+description = "Manutenção preditiva (AI4I 2020): modelos clássicos (SVM, MLP, RF, XGBoost) x LLM via prompting"
+readme = "README.md"
+authors = [{ name = "Vitor Reis" }]
+requires-python = ">=3.10"
+dependencies = [
+    # Dados e modelos clássicos
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scikit-learn>=1.4",
+    "imbalanced-learn>=0.12",
+    "xgboost>=2.0",
+    "joblib>=1.3",
+    # Gráficos e tabelas
+    "matplotlib>=3.7",
+    "seaborn>=0.13",
+    "tabulate>=0.9",
+    # Etapa II (LLM)
+    "python-dotenv>=1.0",
+    "openai>=1.40",     # DeepSeek e outros endpoints compatíveis com OpenAI
+    "anthropic>=0.70",  # Claude (opcional)
+    "tqdm>=4.66",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.0",
+    "ipykernel>=6.0",
+]
+
+[tool.uv]
+# Projeto de análise, não um pacote publicável: uv só gerencia o ambiente.
+package = false

@@ -1,0 +1,28 @@
+# Segredos: NUNCA versionar
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# Dados gerados (a base original em data/raw/ É versionada, ~500 KB)
+data/processed/*
+!data/processed/.gitkeep
+
+# Modelos treinados (pesados e reproduzíveis)
+*.joblib
+*.pkl
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
