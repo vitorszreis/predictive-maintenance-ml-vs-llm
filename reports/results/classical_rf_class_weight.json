@@ -1,0 +1,7 @@
+{
+  "best_params": {
+    "clf__max_depth": 20,
+    "clf__n_estimators": 500
+  },
+  "cv_f1": 0.6784818481848185
+}

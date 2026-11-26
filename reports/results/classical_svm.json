@@ -1,0 +1,7 @@
+{
+  "best_params": {
+    "clf__C": 100,
+    "clf__gamma": "scale"
+  },
+  "cv_f1": 0.5417859597256259
+}

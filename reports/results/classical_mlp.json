@@ -1,0 +1,11 @@
+{
+  "best_params": {
+    "clf__alpha": 0.01,
+    "clf__hidden_layer_sizes": [
+      64,
+      32
+    ],
+    "clf__learning_rate_init": 0.01
+  },
+  "cv_f1": 0.5936326979756898
+}
