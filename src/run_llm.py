@@ -5,7 +5,7 @@ mais tempo e custo por 100 amostras.
 
 Uso:
     python -m src.run_llm --dry-run              # mostra o prompt, não chama a API
-    python -m src.run_llm --limit 10             # teste rápido com 10 casos
+    python -m src.run_llm --limit 10             # teste rápido com 10 casos, não salva nada
     python -m src.run_llm                        # k = 0, 3, 5, 10, 20 na amostra toda
     python -m src.run_llm --k 0 5 --provider deepseek
 
@@ -116,7 +116,7 @@ def main() -> None:
         setting = "zero-shot" if k == 0 else f"few-shot k={k}"
         m.update({
             "stage": "II", "model": f"{client.provider}:{client.model}", "setting": setting,
-            "eval_set": "eval_sample" if not args.limit else f"eval_sample[:{args.limit}]",
+            "eval_set": "eval_sample",
             "time_per_100_s": round(pred["latency_s"].mean() * 100, 2),
             "cost_usd": round(cost, 6), "cost_per_100_usd": round(cost / len(pred) * 100, 6),
             "input_tokens": tin, "output_tokens": tout, "invalid_answers": n_invalid,
@@ -126,6 +126,8 @@ def main() -> None:
         print(f"   k={k:2d} acc={m['accuracy']:.3f} prec={m['precision']:.3f} rec={m['recall']:.3f} "
               f"f1={m['f1']:.3f} auc={m['roc_auc']} inválidas={n_invalid} "
               f"t/100={m['time_per_100_s']}s custo=${cost:.4f}")
+        if args.limit:
+            continue
 
         pred.to_csv(C.RESULTS / f"llm_{tag}_k{k}_predictions.csv", index=False)
         plot_confusion(pred["y_true"], y_pred, f"LLM {setting}", C.FIGURES / f"cm_llm_{tag}_k{k}.png")
@@ -136,6 +138,9 @@ def main() -> None:
         (prompt_dir / f"{PROMPT_VERSION}_k{k}.txt").write_text(
             f"[SYSTEM]\n{system}\n\n[USER]\n{user}\n", encoding="utf-8")
 
+    if args.limit:
+        print("\n--limit: teste rápido, nada foi salvo")
+        return
     save_json({"provider": client.provider, "model": client.model, "prompt_version": PROMPT_VERSION,
                "run_at": datetime.now(timezone.utc).isoformat(), "price_input_per_mtok": p_in,
                "price_output_per_mtok": p_out, "results": rows}, C.RESULTS / f"llm_{tag}.json")
