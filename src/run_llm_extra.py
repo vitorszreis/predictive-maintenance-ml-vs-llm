@@ -156,20 +156,20 @@ def plot() -> None:
             items.append(("Só as regras, sem LLM", r["f1"], "#8C8C8C"))
 
     labels, vals, colors = zip(*items, strict=True)
-    fig, ax = plt.subplots(figsize=(8, 0.36 * len(items) + 1.4))
+    fig, ax = plt.subplots(figsize=(9, 0.36 * len(items) + 1.8))
     ax.barh(labels, vals, color=colors)
     for i, val in enumerate(vals):
         ax.text(val + 0.01, i, f"{val:.2f}", va="center", fontsize=8)
     ax.invert_yaxis()
     ax.set_xlim(0, 1.05)
-    ax.set_xlabel("F1 (classe falha) na amostra fixa de 200 casos")
-    ax.legend(handles=[Patch(color="#4C72B0", label="Clássicos"),
-                       Patch(color="#DD8452", label="LLM, prompt original"),
-                       Patch(color="#55A868", label="LLM v2, só dados de treino"),
-                       Patch(color="#C44E52", label="LLM v2, com regras de domínio"),
-                       Patch(color="#8C8C8C", label="Regras, sem LLM")],
-              loc="lower right", fontsize=7)
-    fig.tight_layout()
+    ax.set_xlabel("F1 (classe falha), amostra fixa de 200 casos")
+    fig.legend(handles=[Patch(color="#4C72B0", label="Clássicos"),
+                        Patch(color="#DD8452", label="LLM, prompt original"),
+                        Patch(color="#55A868", label="LLM v2, só dados de treino"),
+                        Patch(color="#C44E52", label="LLM v2, com regras de domínio"),
+                        Patch(color="#8C8C8C", label="Regras, sem LLM")],
+               loc="lower center", ncol=3, frameon=False, fontsize=8)
+    fig.tight_layout(rect=(0, 0.09, 1, 1))
     C.FIGURES.mkdir(parents=True, exist_ok=True)
     fig.savefig(C.FIGURES / "extra_f1.png", dpi=150)
     plt.close(fig)
