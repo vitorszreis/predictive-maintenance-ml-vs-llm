@@ -34,7 +34,25 @@ desbalanceada (3,4% de falhas), em que errar uma falha (falso negativo) custa ma
 
 ## Resultados
 
-Amostra fixa de 200 casos do teste (50 falhas). Tabela completa em
+### Etapa I no teste completo
+
+2.000 casos, 68 falhas, configuração com SMOTE.
+
+| Modelo | Precisão | Revocação | F1 | AUC-ROC | Melhor configuração |
+|---|---|---|---|---|---|
+| XGBoost | 0,714 | 0,809 | **0,759** | 0,970 | 500 árvores, profundidade 6, taxa 0,1 |
+| MLP | 0,509 | 0,809 | 0,625 | 0,969 | camadas (64, 32), α = 0,01, taxa 0,01 |
+| Random Forest | 0,495 | 0,735 | 0,592 | 0,973 | 200 árvores, sem limite de profundidade |
+| SVM (RBF) | 0,402 | 0,779 | 0,530 | 0,951 | C = 100, γ = scale |
+
+Os atributos derivados (potência, diferença de temperatura e desgaste x torque) melhoram o F1 de
+SVM, MLP e Random Forest; o Random Forest vai a 0,718. Com pesos de classe no lugar do SMOTE,
+Random Forest e XGBoost melhoram (0,692 e 0,768) e SVM e MLP pioram.
+
+### Clássicos x LLM
+
+Amostra fixa de 200 casos do teste (50 falhas). Como ela tem 25% de falhas, a precisão aqui é
+bem maior que no teste completo. Tabela completa em
 [`reports/results/comparison.md`](reports/results/comparison.md).
 
 | Modelo | Configuração | Precisão | Revocação | F1 | AUC-ROC | Tempo/100 | Custo/100 |
@@ -47,9 +65,22 @@ Amostra fixa de 200 casos do teste (50 falhas). Tabela completa em
 
 - Com dados rotulados, os clássicos vencem com folga, em uma fração do tempo e sem custo de API.
 - O LLM pega a maior parte das falhas sem nenhum treino, mas gera muitos alarmes falsos.
-- **Experimento extra** ([`comparison_extra.md`](reports/results/extra/comparison_extra.md)): com
-  exemplos escolhidos por vizinhança, as regras de falha da documentação no prompt e um limiar
-  ajustado em validação, o LLM chega a F1 0,844. Só que as regras sozinhas, sem LLM, já dão 0,913.
+### Experimento extra: prompt v2
+
+Tabela em [`comparison_extra.md`](reports/results/extra/comparison_extra.md) e gráfico em
+[`extra_f1.png`](reports/figures/extra_f1.png).
+
+- Com exemplos escolhidos por vizinhança e limiar ajustado em validação, só com dados de treino,
+  o `deepseek-chat` vai de 0,66 para 0,78 de F1.
+- Com as regras de falha da documentação no prompt, chega a 0,844. O `deepseek-reasoner` chega a
+  0,864, mas é cerca de 5 vezes mais lento e deu 7 respostas inválidas em 200.
+- As mesmas regras aplicadas direto, sem LLM, dão 0,913: o ganho vem do conhecimento de domínio,
+  não do modelo.
+
+## Tecnologias
+
+Python 3.12, pandas, scikit-learn, imbalanced-learn, XGBoost, matplotlib, seaborn, Jupyter,
+API da DeepSeek (SDK da OpenAI) e [uv](https://docs.astral.sh/uv/) para o ambiente.
 
 ## Como rodar
 
@@ -63,7 +94,7 @@ uv run python -m src.data              # 1. prepara os conjuntos (treino, teste,
 uv run python -m src.train_classical   # 2. Etapa I: SVM, MLP, RF, XGBoost
 copy .env.example .env                 # 3. Etapa II: coloque a DEEPSEEK_API_KEY no .env (Linux/Mac: cp)
 uv run python -m src.run_llm --dry-run #    confere o prompt sem chamar a API
-uv run python -m src.run_llm --limit 10 #   teste barato com 10 casos
+uv run python -m src.run_llm --limit 10 #   teste rápido com 10 casos (não salva nada)
 uv run python -m src.run_llm           #    zero-shot + few-shot 3/5/10/20 na amostra toda
 uv run python -m src.compare           # 4. tabela e gráfico finais
 uv run python -m src.run_llm_extra     # extra: prompt v2 (vizinhos, atributos derivados, regras)
@@ -129,4 +160,4 @@ Sem uv: `pip install -r requirements.txt`.
 
 ## Autor
 
-Vitor Reis
+Vitor Reis · [GitHub](https://github.com/vitorszreis)
