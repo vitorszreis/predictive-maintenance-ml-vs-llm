@@ -5,5 +5,7 @@ n,accuracy,precision,recall,f1,f1_macro,roc_auc,pr_auc,tn,fp,fn,tp,stage,model,v
 200,0.89,1.0,0.56,0.7179,0.8248,0.8739,0.8084,150,0,22,28,II-extra,deepseek:deepseek-chat,regras,zero-shot + regras + derivados,True,eval_sample,0.5,90.89,0.020306,0.010153,122575.0,3200.0,0.0,v2,
 200,0.87,1.0,0.48,0.6486,0.7844,0.9778,0.9305,150,0,26,24,II-extra,deepseek:deepseek-chat,regras_knn10,k=10 vizinhos + regras + derivados,True,eval_sample,0.5,89.69,0.049045,0.024523,314168.0,3200.0,0.0,v2,
 200,0.93,0.95,0.76,0.8444,0.8996,0.9778,0.9305,148,2,12,38,II-extra,deepseek:deepseek-chat,regras_knn10,"k=10 vizinhos + regras + derivados, limiar 0.12",True,eval_sample,0.12,89.69,0.049045,0.024523,314168.0,3200.0,0.0,v2,0.8602
+200,0.94,1.0,0.76,0.8636,0.9126,0.9063,0.8823,150,0,12,38,II-extra,deepseek:deepseek-reasoner,regras,zero-shot + regras + derivados,True,eval_sample,0.5,486.52,0.106601,0.0533,127575.0,145774.0,7.0,v2,
+200,0.925,0.8431,0.86,0.8515,0.9007,0.9063,0.8823,142,8,7,43,II-extra,deepseek:deepseek-reasoner,regras,"zero-shot + regras + derivados, limiar 0.02",True,eval_sample,0.021,486.52,0.106601,0.0533,127575.0,145774.0,7.0,v2,0.9216
 200,0.96,1.0,0.84,0.913,0.9435,,,150,0,8,42,referência,regras da documentação,regras_python,regras sem LLM,True,eval_sample,,0.0,0.0,,,,,-,
 200,0.925,0.7869,0.96,0.8649,0.9065,,,137,13,2,48,referência,regras da documentação,regras_python,regras sem LLM (com faixa de desgaste),True,eval_sample,,0.0,0.0,,,,,-,
