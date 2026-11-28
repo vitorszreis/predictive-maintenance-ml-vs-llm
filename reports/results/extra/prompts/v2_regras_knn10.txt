@@ -1,0 +1,44 @@
+[SYSTEM]
+Você é um engenheiro de manutenção especialista em máquinas de usinagem (fresadoras).
+Sua tarefa é classificar se uma máquina vai FALHAR (1) ou NÃO falhar (0) a partir de leituras de sensores de um ciclo de operação.
+
+Atributos de cada leitura:
+- Tipo: qualidade do produto em fabricação (L = baixa, M = média, H = alta)
+- Temperatura do ar [K]
+- Temperatura do processo [K]
+- Rotação [rpm]
+- Torque [Nm]
+- Desgaste da ferramenta [min]: tempo acumulado de uso da ferramenta
+
+Atributos derivados, já calculados para você:
+- ΔT [K] = temperatura do processo - temperatura do ar
+- Potência [W] = torque x rotação x 2π/60
+- Desgaste x torque [min·Nm]
+
+Mecanismos de falha conhecidos desta máquina (a falha ocorre se QUALQUER um valer):
+1. Falha de potência: potência abaixo de 3500 W ou acima de 9000 W.
+2. Falha de dissipação de calor: ΔT abaixo de 8,6 K E rotação abaixo de 1380 rpm, ao mesmo tempo.
+3. Falha por sobrecarga: desgaste x torque acima de 11000 min·Nm (tipo L), 12000 (tipo M) ou 13000 (tipo H).
+4. Falha por desgaste: a ferramenta é trocada ou quebra num instante aleatório entre 200 e 240 min de uso.
+   Nessa faixa o risco é moderado, mas a maioria dos casos NÃO falha; abaixo de 200 min esse modo não ocorre.
+5. Há ainda falhas aleatórias raríssimas (cerca de 0,1%), impossíveis de prever.
+Se nenhum mecanismo se aplica, a leitura é normal. Falhas são raras: cerca de 3% dos ciclos.
+
+Responda SOMENTE com um JSON de uma linha, sem texto antes ou depois, no formato:
+{"falha": 0 ou 1, "probabilidade": número entre 0 e 1 com a sua confiança de que haverá falha}
+
+[USER]
+Leituras rotuladas mais parecidas com o caso, do histórico (10):
+- Tipo: M | Temperatura do ar: 299.1 K | Temperatura do processo: 310.1 K | Rotação: 1649 rpm | Torque: 31.6 Nm | Desgaste da ferramenta: 41 min | ΔT: 11.0 K | Potência: 5457 W | Desgaste x torque: 1296 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 298.7 K | Temperatura do processo: 310.1 K | Rotação: 1693 rpm | Torque: 31.9 Nm | Desgaste da ferramenta: 51 min | ΔT: 11.4 K | Potência: 5656 W | Desgaste x torque: 1627 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.6 K | Temperatura do processo: 310.2 K | Rotação: 1620 rpm | Torque: 30.0 Nm | Desgaste da ferramenta: 70 min | ΔT: 10.6 K | Potência: 5089 W | Desgaste x torque: 2100 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.1 K | Rotação: 1705 rpm | Torque: 30.1 Nm | Desgaste da ferramenta: 84 min | ΔT: 11.1 K | Potência: 5374 W | Desgaste x torque: 2528 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 298.9 K | Temperatura do processo: 309.9 K | Rotação: 1645 rpm | Torque: 31.4 Nm | Desgaste da ferramenta: 86 min | ΔT: 11.0 K | Potência: 5409 W | Desgaste x torque: 2700 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.6 K | Temperatura do processo: 310.1 K | Rotação: 1646 rpm | Torque: 29.6 Nm | Desgaste da ferramenta: 73 min | ΔT: 10.5 K | Potência: 5102 W | Desgaste x torque: 2161 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.2 K | Rotação: 1625 rpm | Torque: 31.8 Nm | Desgaste da ferramenta: 89 min | ΔT: 11.2 K | Potência: 5411 W | Desgaste x torque: 2830 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.0 K | Rotação: 1667 rpm | Torque: 30.0 Nm | Desgaste da ferramenta: 53 min | ΔT: 11.0 K | Potência: 5237 W | Desgaste x torque: 1590 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.3 K | Rotação: 1662 rpm | Torque: 33.6 Nm | Desgaste da ferramenta: 67 min | ΔT: 11.3 K | Potência: 5848 W | Desgaste x torque: 2251 min·Nm -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.2 K | Rotação: 1657 rpm | Torque: 32.3 Nm | Desgaste da ferramenta: 64 min | ΔT: 11.2 K | Potência: 5605 W | Desgaste x torque: 2067 min·Nm -> {"falha": 0}
+
+Classifique esta leitura:
+Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.3 K | Rotação: 1657 rpm | Torque: 31.0 Nm | Desgaste da ferramenta: 70 min | ΔT: 11.3 K | Potência: 5379 W | Desgaste x torque: 2170 min·Nm

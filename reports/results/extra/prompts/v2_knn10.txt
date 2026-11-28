@@ -1,0 +1,30 @@
+[SYSTEM]
+Você é um engenheiro de manutenção especialista em máquinas de usinagem (fresadoras).
+Sua tarefa é classificar se uma máquina vai FALHAR (1) ou NÃO falhar (0) a partir de leituras de sensores de um ciclo de operação.
+
+Atributos de cada leitura:
+- Tipo: qualidade do produto em fabricação (L = baixa, M = média, H = alta)
+- Temperatura do ar [K]
+- Temperatura do processo [K]
+- Rotação [rpm]
+- Torque [Nm]
+- Desgaste da ferramenta [min]: tempo acumulado de uso da ferramenta
+
+Responda SOMENTE com um JSON de uma linha, sem texto antes ou depois, no formato:
+{"falha": 0 ou 1, "probabilidade": número entre 0 e 1 com a sua confiança de que haverá falha}
+
+[USER]
+Leituras rotuladas mais parecidas com o caso, do histórico (10):
+- Tipo: M | Temperatura do ar: 299.1 K | Temperatura do processo: 310.1 K | Rotação: 1649 rpm | Torque: 31.6 Nm | Desgaste da ferramenta: 41 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 298.7 K | Temperatura do processo: 310.1 K | Rotação: 1693 rpm | Torque: 31.9 Nm | Desgaste da ferramenta: 51 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.6 K | Temperatura do processo: 310.2 K | Rotação: 1620 rpm | Torque: 30.0 Nm | Desgaste da ferramenta: 70 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.1 K | Rotação: 1705 rpm | Torque: 30.1 Nm | Desgaste da ferramenta: 84 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 298.9 K | Temperatura do processo: 309.9 K | Rotação: 1645 rpm | Torque: 31.4 Nm | Desgaste da ferramenta: 86 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.6 K | Temperatura do processo: 310.1 K | Rotação: 1646 rpm | Torque: 29.6 Nm | Desgaste da ferramenta: 73 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.2 K | Rotação: 1625 rpm | Torque: 31.8 Nm | Desgaste da ferramenta: 89 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.0 K | Rotação: 1667 rpm | Torque: 30.0 Nm | Desgaste da ferramenta: 53 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.3 K | Rotação: 1662 rpm | Torque: 33.6 Nm | Desgaste da ferramenta: 67 min -> {"falha": 0}
+- Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.2 K | Rotação: 1657 rpm | Torque: 32.3 Nm | Desgaste da ferramenta: 64 min -> {"falha": 0}
+
+Classifique esta leitura:
+Tipo: M | Temperatura do ar: 299.0 K | Temperatura do processo: 310.3 K | Rotação: 1657 rpm | Torque: 31.0 Nm | Desgaste da ferramenta: 70 min
