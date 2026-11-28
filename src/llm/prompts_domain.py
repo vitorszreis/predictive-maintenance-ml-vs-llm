@@ -1,14 +1,4 @@
-"""Prompt v2, do experimento extra da Etapa II. O prompt v1 (src/llm/prompts.py) não muda.
-
-Três ingredientes, combinados em VARIANTS:
-
-- derivados: a leitura já traz potência, diferença de temperatura e desgaste x torque
-  calculados (o LLM erra contas com números de 4 dígitos);
-- regras: o prompt descreve os mecanismos de falha da documentação da base, um
-  conhecimento de domínio que os modelos clássicos não recebem;
-- knn: os exemplos few-shot são os k vizinhos mais próximos do caso no treino, em vez
-  de exemplos fixos e balanceados.
-"""
+"""Prompt v2 (experimento extra): atributos derivados, regras de falha e exemplos por vizinhança."""
 from __future__ import annotations
 
 import json
@@ -57,12 +47,12 @@ Sua tarefa é classificar se uma máquina vai FALHAR (1) ou NÃO falhar (0) a pa
 
 @dataclass(frozen=True)
 class Variant:
-    name: str        # identificador curto, usado nos arquivos
-    label: str       # nome no relatório
+    name: str
+    label: str
     derived: bool
     rules: bool
     knn: int         # 0 = zero-shot
-    domain: bool     # usa conhecimento de domínio que os clássicos não têm?
+    domain: bool     # regras da documentação no prompt
 
 
 VARIANTS = {
@@ -104,7 +94,6 @@ def describe_row(row: pd.Series, derived: bool) -> str:
 
 
 class NeighborIndex:
-    """Vizinhos mais próximos no treino (atributos numéricos padronizados + tipo)."""
 
     def __init__(self, train: pd.DataFrame):
         self.train = train.reset_index(drop=True)
@@ -122,7 +111,7 @@ class NeighborIndex:
         _, idx = self.nn.kneighbors(x, n_neighbors=k + 1)
         found = self.train.iloc[idx[0]]
         found = found[found["UDI"] != row["UDI"]]  # na validação, o próprio caso está no treino
-        # do mais distante para o mais próximo: o vizinho mais parecido fica logo antes do caso
+        # o mais parecido fica por último, logo antes do caso
         return found.head(k).iloc[::-1]
 
 
@@ -140,7 +129,7 @@ def build_messages(row: pd.Series, v: Variant, index: NeighborIndex | None) -> t
 
 
 def rule_baseline(df: pd.DataFrame, with_twf: bool = False) -> pd.Series:
-    """Regras da documentação aplicadas diretamente, sem LLM (referência)."""
+    """As regras da documentação aplicadas direto, sem LLM."""
     lim = df["Type"].map({"L": 11000, "M": 12000, "H": 13000})
     pwf = (df["Power [W]"] < 3500) | (df["Power [W]"] > 9000)
     hdf = (df["Temp diff [K]"] < 8.6) & (df["Rotational speed [rpm]"] < 1380)

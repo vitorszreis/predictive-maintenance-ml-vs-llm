@@ -1,22 +1,12 @@
-"""Experimento extra da Etapa II: o LLM com o prompt v2.
-
-Não mexe em summary.csv nem nos resultados do prompt v1: tudo vai para
-reports/results/extra/ e reports/figures/extra_*.png.
-
-Variantes (src/llm/prompts_domain.py):
-    knn10         few-shot com os 10 vizinhos mais próximos do treino
-    derivados     zero-shot com potência, ΔT e desgaste x torque
-    regras        zero-shot com as regras de falha da base + derivados   (usa conhecimento de domínio)
-    regras_knn10  regras + derivados + 10 vizinhos                       (usa conhecimento de domínio)
+"""Experimento extra: o LLM com o prompt v2. Resultados em reports/results/extra/.
 
 Uso:
     python -m src.run_llm_extra --dry-run
-    python -m src.run_llm_extra                                   # todas as variantes, deepseek-chat
+    python -m src.run_llm_extra
     python -m src.run_llm_extra --variants regras --model deepseek-reasoner
-    python -m src.run_llm_extra --plot-only                       # refaz tabela e gráfico
+    python -m src.run_llm_extra --plot-only
 
---tune (padrão: knn10 e regras_knn10) escolhe o limiar da probabilidade numa amostra de
-validação tirada do treino (200 casos, 25% falhas) e o aplica na amostra fixa.
+--tune ajusta o limiar de decisão numa amostra de validação tirada do treino.
 """
 from __future__ import annotations
 
@@ -31,14 +21,20 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Patch
 import pandas as pd
+from matplotlib.patches import Patch
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 
 from src import config as C
 from src.data import load_splits
-from src.llm.prompts_domain import PROMPT_VERSION, VARIANTS, NeighborIndex, build_messages, rule_baseline
+from src.llm.prompts_domain import (
+    PROMPT_VERSION,
+    VARIANTS,
+    NeighborIndex,
+    build_messages,
+    rule_baseline,
+)
 from src.llm.providers import LLMClient, parse_answer
 from src.metrics import compute_metrics, plot_confusion, save_json
 from src.run_llm import Cache, price
@@ -49,7 +45,6 @@ TUNE_DEFAULT = ["knn10", "regras_knn10"]
 
 
 def validation_sample(train: pd.DataFrame) -> pd.DataFrame:
-    """Amostra do treino com a mesma composição da amostra fixa, para ajustar o limiar."""
     n_fail = round(C.EVAL_SAMPLE_SIZE * C.EVAL_SAMPLE_FAILURE_RATIO)
     fails = train[train[C.TARGET] == 1].sample(n=n_fail, random_state=C.SEED + 1)
     normal = train[train[C.TARGET] == 0].sample(n=C.EVAL_SAMPLE_SIZE - n_fail, random_state=C.SEED + 1)

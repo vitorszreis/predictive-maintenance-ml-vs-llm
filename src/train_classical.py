@@ -1,16 +1,11 @@
-"""Etapa I: SVM e MLP, com Random Forest e XGBoost como referência.
-
-Pipeline de cada modelo, ajustado dentro da validação cruzada:
-    one-hot(Type) + z-score  ->  SMOTE  ->  modelo
+"""Etapa I: SVM, MLP, Random Forest e XGBoost com busca em grade.
 
 Uso:
-    python -m src.train_classical                    # todos os modelos
-    python -m src.train_classical --models svm mlp   # só alguns
+    python -m src.train_classical
+    python -m src.train_classical --models svm mlp
     python -m src.train_classical --balance class_weight
-    python -m src.train_classical --quick            # grades mínimas, para testar
-
-As variações (--balance, --engineered, --quick) gravam seus arquivos com sufixo, sem
-sobrescrever a configuração principal. O --quick não entra no summary.csv.
+    python -m src.train_classical --engineered
+    python -m src.train_classical --quick    # grade mínima, fora do summary.csv
 """
 from __future__ import annotations
 
@@ -32,7 +27,13 @@ from xgboost import XGBClassifier
 
 from src import config as C
 from src.data import feature_columns, load_splits
-from src.metrics import append_summary, compute_metrics, plot_confusion, plot_roc, save_json
+from src.metrics import (
+    append_summary,
+    compute_metrics,
+    plot_confusion,
+    plot_roc,
+    save_json,
+)
 
 
 def build_preprocessor(num_cols, cat_cols) -> ColumnTransformer:
@@ -43,7 +44,6 @@ def build_preprocessor(num_cols, cat_cols) -> ColumnTransformer:
 
 
 def model_specs(balance: str, pos_weight: float, quick: bool) -> dict:
-    """Modelo base + grade de hiperparâmetros. Prefixo 'clf__' = passo do pipeline."""
     cw = "balanced" if balance == "class_weight" else None
     specs = {
         "svm": (
@@ -51,7 +51,7 @@ def model_specs(balance: str, pos_weight: float, quick: bool) -> dict:
             {"clf__C": [0.1, 1, 10, 100], "clf__gamma": ["scale", 0.1, 0.01]},
         ),
         "mlp": (
-            # MLPClassifier não tem class_weight: com balance=class_weight, treina sem balanceamento.
+            # MLP não tem class_weight
             MLPClassifier(max_iter=500, early_stopping=True, random_state=C.SEED),
             {
                 "clf__hidden_layer_sizes": [(16,), (32,), (32, 16), (64, 32)],
@@ -77,7 +77,6 @@ def model_specs(balance: str, pos_weight: float, quick: bool) -> dict:
 
 
 def score_of(model, X) -> np.ndarray:
-    """Escore contínuo da classe 'falha' para AUC-ROC."""
     if hasattr(model, "predict_proba"):
         try:
             return model.predict_proba(X)[:, 1]

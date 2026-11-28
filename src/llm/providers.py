@@ -1,15 +1,4 @@
-"""Clientes de LLM. O provedor é escolhido por variável de ambiente (arquivo .env).
-
-Provedores:
-    deepseek           DeepSeek (padrão; API compatível com OpenAI) DEEPSEEK_API_KEY
-    zhipu              GLM / Zhipu AI, ex.: glm-4-flash            ZHIPU_API_KEY
-    anthropic          Claude (SDK oficial anthropic)              ANTHROPIC_API_KEY
-    openai_compatible  qualquer endpoint compatível com OpenAI     LLM_API_KEY + LLM_BASE_URL
-                       (OpenRouter, Groq, Ollama local, etc.)
-    dummy              regra fixa, offline, para testar o pipeline sem custo
-
-As chaves vêm do .env (modelo em .env.example).
-"""
+"""Clientes de LLM. Provedor, modelo e chave vêm do .env (ver .env.example)."""
 from __future__ import annotations
 
 import json
@@ -104,7 +93,7 @@ class LLMClient:
             return _dummy_rule(user), len((system + user).split()), 12
 
         if self.provider == "anthropic":
-            # Os modelos Claude atuais não aceitam temperature; usa-se effort.
+            # Claude não aceita temperature; usa effort
             resp = self._client.messages.create(
                 model=self.model,
                 max_tokens=1024,
@@ -128,7 +117,7 @@ class LLMClient:
 
 
 def _dummy_rule(user: str) -> str:
-    """Regras de potência, sobrecarga e desgaste da documentação da base."""
+    """Regra fixa para testar o pipeline offline."""
     case = user.split("Classifique esta leitura:")[-1]
 
     def num(pattern: str) -> float:
@@ -141,7 +130,6 @@ def _dummy_rule(user: str) -> str:
 
 
 def parse_answer(text: str) -> tuple[int | None, float | None]:
-    """Extrai (rótulo, probabilidade) da resposta. Tolera texto extra e cercas ```json."""
     m = re.search(r'"falha"\s*:\s*([01])', text)
     label = int(m.group(1)) if m else None
     p = re.search(r'"probabilidade"\s*:\s*([0-9]*\.?[0-9]+)', text)

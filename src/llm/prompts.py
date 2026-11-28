@@ -1,8 +1,4 @@
-"""Prompts da Etapa II.
-
-Toda mudança no texto deve subir PROMPT_VERSION. O prompt de cada execução é salvo
-em reports/results/prompts/.
-"""
+"""Prompt v1 da Etapa II. Se mudar o texto, suba PROMPT_VERSION."""
 from __future__ import annotations
 
 import json
@@ -29,7 +25,6 @@ Responda SOMENTE com um JSON de uma linha, sem texto antes ou depois, no formato
 
 
 def describe_row(row: pd.Series) -> str:
-    """Leitura em texto, com os valores originais (com unidade), não os normalizados."""
     return (
         f"Tipo: {row['Type']} | "
         f"Temperatura do ar: {row['Air temperature [K]']:.1f} K | "
@@ -41,11 +36,7 @@ def describe_row(row: pd.Series) -> str:
 
 
 def select_few_shot(train: pd.DataFrame, k: int) -> pd.DataFrame:
-    """k exemplos fixos do conjunto de treino.
-
-    Metade são falhas (no mínimo 1): na proporção real (3%) quase nunca apareceria
-    uma. Os conjuntos são aninhados (os 3 exemplos estão nos 5, que estão nos 10...).
-    """
+    """Exemplos fixos do treino, metade falhas, aninhados (3 ⊂ 5 ⊂ 10 ⊂ 20)."""
     if k == 0:
         return train.iloc[0:0]
     max_k = max(C.FEW_SHOT_KS)
@@ -57,7 +48,6 @@ def select_few_shot(train: pd.DataFrame, k: int) -> pd.DataFrame:
 
 
 def build_messages(row: pd.Series, examples: pd.DataFrame) -> tuple[str, str]:
-    """Retorna (system, user). Exemplos few-shot vão no turno do usuário."""
     parts = []
     if len(examples):
         parts.append(f"Exemplos rotulados ({len(examples)}):")

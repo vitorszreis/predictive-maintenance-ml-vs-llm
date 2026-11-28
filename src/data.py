@@ -1,8 +1,4 @@
-"""Carregamento, limpeza e divisão da base AI4I 2020.
-
-Uso:
-    python -m src.data          # gera data/processed/*.csv e mostra um resumo
-"""
+"""Carga, limpeza e divisão da base. `python -m src.data` gera data/processed/."""
 from __future__ import annotations
 
 import numpy as np
@@ -13,7 +9,6 @@ from src import config as C
 
 
 def load_raw() -> pd.DataFrame:
-    """Lê o CSV original. utf-8-sig tolera arquivos com BOM."""
     if not C.DATA_RAW.exists():
         raise FileNotFoundError(
             f"Base não encontrada em {C.DATA_RAW}. Rode: python scripts/download_data.py"
@@ -22,7 +17,6 @@ def load_raw() -> pd.DataFrame:
 
 
 def clean(df: pd.DataFrame) -> pd.DataFrame:
-    """Remove duplicatas, verifica nulos e ajusta tipos. A base vem limpa."""
     df = df.copy()
     n0 = len(df)
     df = df.drop_duplicates(subset="UDI")
@@ -35,12 +29,7 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Atributos ligados às regras de falha da documentação da base.
-
-    - diferença de temperatura: falha por dissipação de calor (HDF)
-    - potência [W] = torque * velocidade angular: falha de potência (PWF)
-    - desgaste * torque: falha por sobrecarga (OSF)
-    """
+    """Atributos ligados às falhas por calor (HDF), potência (PWF) e sobrecarga (OSF)."""
     df = df.copy()
     df["Temp diff [K]"] = df["Process temperature [K]"] - df["Air temperature [K]"]
     df["Power [W]"] = df["Torque [Nm]"] * df["Rotational speed [rpm]"] * 2 * np.pi / 60
@@ -56,15 +45,12 @@ def feature_columns(engineered: bool = C.USE_ENGINEERED_FEATURES) -> tuple[list[
 
 
 def split(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Divisão estratificada. Normalização e balanceamento ficam nos pipelines dos
-    modelos, ajustados só no treino."""
     return train_test_split(
         df, test_size=C.TEST_SIZE, stratify=df[C.TARGET], random_state=C.SEED
     )
 
 
 def eval_sample(test: pd.DataFrame) -> pd.DataFrame:
-    """Amostra fixa do conjunto de teste usada na comparação com o LLM."""
     n_fail = round(C.EVAL_SAMPLE_SIZE * C.EVAL_SAMPLE_FAILURE_RATIO)
     fails = test[test[C.TARGET] == 1]
     n_fail = min(n_fail, len(fails))
@@ -78,7 +64,7 @@ def eval_sample(test: pd.DataFrame) -> pd.DataFrame:
 
 def prepare(save: bool = True) -> dict[str, pd.DataFrame]:
     df = clean(load_raw())
-    df = add_engineered_features(df)  # sempre calculadas; o uso é decidido em feature_columns()
+    df = add_engineered_features(df)
     train, test = split(df)
     sample = eval_sample(test)
     out = {"train": train, "test": test, "eval_sample": sample}
@@ -90,7 +76,6 @@ def prepare(save: bool = True) -> dict[str, pd.DataFrame]:
 
 
 def load_splits() -> dict[str, pd.DataFrame]:
-    """Lê os conjuntos já gerados (ou gera, se ainda não existirem)."""
     paths = {n: C.DATA_PROCESSED / f"{n}.csv" for n in ("train", "test", "eval_sample")}
     if not all(p.exists() for p in paths.values()):
         return prepare(save=True)

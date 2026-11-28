@@ -1,4 +1,3 @@
-"""Métricas e gráficos usados nas duas etapas."""
 from __future__ import annotations
 
 import json
@@ -26,10 +25,6 @@ from src import config as C
 
 
 def compute_metrics(y_true, y_pred, y_score=None) -> dict:
-    """Acurácia, precisão, revocação, F1 (classe falha e macro), AUC-ROC, AUC-PR e matriz.
-
-    y_score: probabilidade/escore da classe 1. Sem ele, AUC fica None.
-    """
     y_true = np.asarray(y_true).astype(int)
     y_pred = np.asarray(y_pred).astype(int)
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
@@ -57,8 +52,7 @@ def save_json(obj: dict, path: Path) -> None:
 
 
 def append_summary(rows: list[dict], path: Path = C.RESULTS / "summary.csv") -> pd.DataFrame:
-    """Acumula os resultados de todos os experimentos numa tabela única.
-    Linhas com mesmo (stage, model, setting, eval_set) são substituídas."""
+    """Linhas com mesmo (stage, model, setting, eval_set) são substituídas."""
     new = pd.DataFrame(rows)
     keys = ["stage", "model", "setting", "eval_set"]
     if path.exists():

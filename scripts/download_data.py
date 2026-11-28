@@ -1,8 +1,4 @@
-"""Baixa a base AI4I 2020 do repositório UCI para data/raw/ai4i2020.csv.
-
-A base já vem incluída no projeto; use este script só se o arquivo sumir.
-Uso: python scripts/download_data.py
-"""
+"""Baixa a base AI4I 2020 da UCI. O CSV já vem no repositório."""
 import hashlib
 import io
 import sys

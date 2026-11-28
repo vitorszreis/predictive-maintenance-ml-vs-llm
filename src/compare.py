@@ -1,8 +1,4 @@
-"""Comparação final clássicos x LLM na mesma amostra (eval_sample).
-
-Uso:
-    python -m src.compare     # gera reports/results/comparison.md e reports/figures/comparison_f1.png
-"""
+"""Tabela e gráfico finais: clássicos x LLM na amostra fixa."""
 from __future__ import annotations
 
 import matplotlib

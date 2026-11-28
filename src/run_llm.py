@@ -1,16 +1,12 @@
-"""Etapa II: classificação via prompting (zero-shot e few-shot 3/5/10/20).
-
-Avalia o LLM na mesma amostra fixa usada para os clássicos, com as mesmas métricas,
-mais tempo e custo por 100 amostras.
+"""Etapa II: classificação via prompt na amostra fixa.
 
 Uso:
-    python -m src.run_llm --dry-run              # mostra o prompt, não chama a API
-    python -m src.run_llm --limit 10             # teste rápido com 10 casos, não salva nada
-    python -m src.run_llm                        # k = 0, 3, 5, 10, 20 na amostra toda
+    python -m src.run_llm --dry-run      # mostra o prompt, não chama a API
+    python -m src.run_llm --limit 10     # teste com 10 casos, não salva nada
+    python -m src.run_llm                # k = 0, 3, 5, 10, 20
     python -m src.run_llm --k 0 5 --provider deepseek
 
-As respostas ficam em cache (data/processed/llm_cache/): rodar de novo não repete
-chamadas já feitas.
+Respostas em cache em data/processed/llm_cache/.
 """
 from __future__ import annotations
 
@@ -31,7 +27,6 @@ from src.metrics import append_summary, compute_metrics, plot_confusion, save_js
 
 
 def price(name: str) -> float:
-    """Preço em USD por 1 milhão de tokens, lido do .env."""
     return float(os.getenv(name, "0") or 0)
 
 
@@ -106,7 +101,7 @@ def main() -> None:
 
         pred = pd.DataFrame(preds)
         n_invalid = int(pred["y_pred"].isna().sum())
-        # Resposta inválida conta como "não falha" (pior caso conservador) e é reportada.
+        # resposta inválida conta como "não falha"
         y_pred = pred["y_pred"].fillna(0).astype(int)
         y_score = pred["prob"].fillna(y_pred.astype(float)) if pred["prob"].notna().any() else None
         m = compute_metrics(pred["y_true"], y_pred, y_score)
@@ -131,7 +126,7 @@ def main() -> None:
 
         pred.to_csv(C.RESULTS / f"llm_{tag}_k{k}_predictions.csv", index=False)
         plot_confusion(pred["y_true"], y_pred, f"LLM {setting}", C.FIGURES / f"cm_llm_{tag}_k{k}.png")
-        # Documentação do prompt exatamente como foi enviado (1º caso como exemplo)
+        # salva o prompt do 1º caso
         system, user = build_messages(sample.iloc[0], examples)
         prompt_dir = C.RESULTS / "prompts"
         prompt_dir.mkdir(parents=True, exist_ok=True)
