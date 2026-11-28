@@ -9,8 +9,9 @@ on the same fixed test sample, including time and cost per 100 predictions.
 
 Trabalho final da disciplina **DCC068 Redes Neurais Artificiais**, Sistemas de Informação, UFJF (2026/2).
 
-<!-- Quando tiver resultados, coloque aqui a figura principal: -->
-<!-- ![Comparação F1](reports/figures/comparison_f1.png) -->
+![Comparação F1](reports/figures/comparison_f1.png)
+
+Relatório técnico: [PDF](reports/relatorio/relatorio.pdf) · [Markdown](reports/relatorio.md)
 
 ## Problema
 
@@ -33,15 +34,22 @@ desbalanceada (3,4% de falhas), em que errar uma falha (falso negativo) custa ma
 
 ## Resultados
 
-*Em andamento.* A tabela final é gerada por `python -m src.compare` em
+Amostra fixa de 200 casos do teste (50 falhas). Tabela completa em
 [`reports/results/comparison.md`](reports/results/comparison.md).
 
 | Modelo | Configuração | Precisão | Revocação | F1 | AUC-ROC | Tempo/100 | Custo/100 |
 |---|---|---|---|---|---|---|---|
-| SVM | | | | | | | |
-| MLP | | | | | | | |
-| LLM | zero-shot | | | | | | |
-| LLM | few-shot (melhor k) | | | | | | |
+| SVM | SMOTE | 0,975 | 0,780 | 0,867 | 0,964 | 0,05 s | — |
+| MLP | SMOTE | 0,976 | 0,800 | 0,879 | 0,979 | < 0,01 s | — |
+| XGBoost | SMOTE | 0,976 | 0,800 | 0,879 | 0,973 | < 0,01 s | — |
+| LLM (DeepSeek) | zero-shot | 0,341 | 0,860 | 0,489 | 0,721 | 98 s | US$ 0,005 |
+| LLM (DeepSeek) | few-shot, k=20 | 0,597 | 0,740 | 0,661 | 0,843 | 97 s | US$ 0,024 |
+
+- Com dados rotulados, os clássicos vencem com folga, em uma fração do tempo e sem custo de API.
+- O LLM pega a maior parte das falhas sem nenhum treino, mas gera muitos alarmes falsos.
+- **Experimento extra** ([`comparison_extra.md`](reports/results/extra/comparison_extra.md)): com
+  exemplos escolhidos por vizinhança, as regras de falha da documentação no prompt e um limiar
+  ajustado em validação, o LLM chega a F1 0,844. Só que as regras sozinhas, sem LLM, já dão 0,913.
 
 ## Como rodar
 
@@ -58,6 +66,7 @@ uv run python -m src.run_llm --dry-run #    confere o prompt sem chamar a API
 uv run python -m src.run_llm --limit 10 #   teste barato com 10 casos
 uv run python -m src.run_llm           #    zero-shot + few-shot 3/5/10/20 na amostra toda
 uv run python -m src.compare           # 4. tabela e gráfico finais
+uv run python -m src.run_llm_extra     # extra: prompt v2 (vizinhos, atributos derivados, regras)
 
 uv run jupyter lab                     # notebooks
 ```
@@ -83,15 +92,18 @@ Sem uv: `pip install -r requirements.txt`.
 │   ├── metrics.py              métricas e gráficos comuns
 │   ├── train_classical.py      Etapa I
 │   ├── run_llm.py              Etapa II
+│   ├── run_llm_extra.py        experimento extra com o prompt v2
 │   ├── compare.py              comparação final
 │   └── llm/
-│       ├── prompts.py          prompt versionado e seleção dos exemplos few-shot
+│       ├── prompts.py          prompt v1 e seleção dos exemplos few-shot
+│       ├── prompts_domain.py   prompt v2: vizinhos, atributos derivados e regras de falha
 │       └── providers.py        clientes DeepSeek / GLM / Claude / OpenAI-compatível
 ├── reports/
-│   ├── relatorio.md            relatório técnico
+│   ├── relatorio.md            relatório técnico (Markdown)
+│   ├── relatorio/              relatório no modelo da SBC (LaTeX e PDF)
 │   ├── figures/                matrizes de confusão, ROC, comparação
-│   ├── results/                métricas (summary.csv), predições e prompts usados
-│   └── slides/
+│   ├── results/                métricas (summary.csv), predições e prompts usados; extra/ para o prompt v2
+│   └── slides/                 apresentação
 ├── scripts/download_data.py
 ├── pyproject.toml              dependências (uv)
 └── uv.lock                     versões travadas
