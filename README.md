@@ -1,38 +1,82 @@
 # Manutenção preditiva: modelos clássicos x LLM
 
-> Previsão de falhas em máquinas industriais com SVM, MLP, Random Forest e XGBoost,
-> comparados a um LLM classificando por *prompting* (zero-shot e few-shot), nos mesmos dados.
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-189FDD)
+![LLM](https://img.shields.io/badge/LLM-DeepSeek-4D6BFE)
 
-**Predictive maintenance: classical ML vs. LLM prompting.** Binary failure prediction on the
-AI4I 2020 dataset, comparing tuned classical models with an LLM used as a zero/few-shot classifier
-on the same fixed test sample, including time and cost per 100 predictions.
+**Um LLM consegue substituir um modelo treinado para prever falhas em máquinas industriais?**
+Comparei SVM, MLP, Random Forest e XGBoost com o DeepSeek classificando por prompt, nos mesmos
+dados, medindo desempenho, tempo e custo.
 
-Trabalho final da disciplina **DCC068 Redes Neurais Artificiais**, Sistemas de Informação, UFJF (2026/2).
+*English: classical ML vs. LLM prompting for predictive maintenance (AI4I 2020). Tuned classifiers
+reach F1 0.88; the prompted LLM reaches 0.66, and 0.86 only when the failure rules are written into
+the prompt. The same rules alone score 0.91.*
 
-![Comparação F1](reports/figures/comparison_f1.png)
+![F1 por abordagem](reports/figures/resumo_f1.png)
 
-Relatório técnico: [PDF](reports/relatorio/relatorio.pdf) · [Markdown](reports/relatorio.md)
+## Principais resultados
 
-## Problema
+- **Os modelos clássicos vencem com folga:** F1 de 0,88 contra 0,66 do LLM com prompt simples.
+  Eles respondem em menos de 1 ms por previsão e sem custo; o LLM leva cerca de 1 s e cobra por
+  chamada.
+- **Engenharia de prompt reduz a distância:** exemplos escolhidos por vizinhança e limiar ajustado
+  em validação levam o LLM de 0,66 a 0,78. Com as regras de falha da documentação no prompt, a 0,86.
+- **Mas o ganho vem do conhecimento de domínio, não do LLM:** as mesmas regras, aplicadas direto e
+  sem modelo nenhum, dão 0,91.
+- **Onde o LLM ajuda:** sem nenhum dado de treino, o zero-shot já detecta 86% das falhas. Serve
+  como triagem quando ainda não há histórico rotulado.
 
-Em uma linha de produção, uma parada não planejada custa caro. A pergunta é: **dadas as leituras
-de sensores de um ciclo de operação, a máquina vai falhar?** É uma classificação binária muito
-desbalanceada (3,4% de falhas), em que errar uma falha (falso negativo) custa mais que um alarme falso.
+## O que o projeto mostra
 
-- **Base:** [AI4I 2020 Predictive Maintenance](https://archive.ics.uci.edu/dataset/601) (UCI), 10.000 ciclos
-- **Atributos:** tipo do produto, temperaturas do ar e do processo, rotação, torque, desgaste da ferramenta
-- **Alvo:** `Machine failure` (339 falhas)
+- **Pipeline sem vazamento de dados:** colunas derivadas do alvo removidas; normalização e SMOTE
+  ajustados só nos folds de treino.
+- **Classes muito desbalanceadas** (3,4% de falhas), avaliadas por F1 e revocação, não por acurácia.
+- **Busca de hiperparâmetros** com validação cruzada estratificada em quatro famílias de modelos.
+- **LLM como classificador, medido com rigor:** prompts versionados, zero-shot e few-shot,
+  exemplos por vizinhos mais próximos, ajuste de limiar em validação, cache de respostas, custo e
+  latência por previsão.
+- **Reprodutibilidade:** semente fixa, dependências travadas com uv, prompts e resultados versionados.
+
+📄 [Relatório técnico (PDF)](reports/relatorio/relatorio.pdf) ·
+📊 [Slides (PDF)](reports/slides/apresentacao.pdf) ·
+📓 [Notebooks](notebooks/)
+
+## Problema e dados
+
+Uma parada não planejada numa linha de produção custa caro. A pergunta é: **dadas as leituras de
+sensores de um ciclo de operação, a máquina vai falhar?** É uma classificação binária em que
+deixar passar uma falha custa mais que um alarme falso.
+
+- **Base:** [AI4I 2020 Predictive Maintenance](https://archive.ics.uci.edu/dataset/601) (UCI),
+  10.000 ciclos de uma fresadora, 339 falhas
+- **Atributos:** tipo do produto, temperaturas do ar e do processo, rotação, torque e desgaste da
+  ferramenta
 
 ## Abordagem
 
 | Etapa | O quê | Como |
 |---|---|---|
-| Dados | limpeza, normalização, balanceamento, divisão | split estratificado 80/20; z-score e SMOTE ajustados só no treino; remoção das colunas que vazam o alvo |
-| I. Clássicos | SVM, MLP (+ Random Forest e XGBoost de referência) | busca em grade com validação cruzada estratificada (5 folds), otimizando F1 |
-| II. LLM | classificação via prompt | zero-shot e few-shot com 3, 5, 10 e 20 exemplos; DeepSeek (`deepseek-chat`) via API, com provedor configurável (GLM, Claude, ...) |
-| Comparação | mesmas métricas, mesmos dados | amostra fixa de 200 casos do teste (50 falhas); acurácia, precisão, revocação, F1, AUC-ROC, matriz de confusão, tempo e custo por 100 amostras |
+| Dados | limpeza, divisão, normalização, balanceamento | split estratificado 80/20; z-score e SMOTE só no treino; remoção das colunas que vazam o alvo |
+| I. Clássicos | SVM, MLP, Random Forest, XGBoost | busca em grade com validação cruzada estratificada de 5 folds, otimizando F1 |
+| II. LLM | classificação por prompt | DeepSeek (`deepseek-chat`) zero-shot e few-shot com 3, 5, 10 e 20 exemplos |
+| Extra | prompt melhorado | exemplos por vizinhança, atributos derivados, regras de falha no prompt, `deepseek-reasoner` |
+| Comparação | mesmas métricas, mesmos dados | 200 casos fixos do teste (50 falhas); precisão, revocação, F1, AUC-ROC, tempo e custo |
 
-## Resultados
+## Resultados detalhados
+
+### Clássicos x LLM
+
+Amostra fixa de 200 casos do teste (50 falhas). Como ela tem 25% de falhas, a precisão aqui é
+maior que no teste completo. Tabela completa em [`comparison.md`](reports/results/comparison.md).
+
+| Modelo | Configuração | Precisão | Revocação | F1 | AUC-ROC | Tempo/100 | Custo/100 |
+|---|---|---|---|---|---|---|---|
+| MLP | SMOTE | 0,976 | 0,800 | 0,879 | 0,979 | < 0,01 s | — |
+| XGBoost | SMOTE | 0,976 | 0,800 | 0,879 | 0,973 | < 0,01 s | — |
+| SVM | SMOTE | 0,975 | 0,780 | 0,867 | 0,964 | 0,05 s | — |
+| LLM (DeepSeek) | zero-shot | 0,341 | 0,860 | 0,489 | 0,721 | 98 s | US$ 0,005 |
+| LLM (DeepSeek) | few-shot, k=20 | 0,597 | 0,740 | 0,661 | 0,843 | 97 s | US$ 0,024 |
 
 ### Etapa I no teste completo
 
@@ -45,112 +89,73 @@ desbalanceada (3,4% de falhas), em que errar uma falha (falso negativo) custa ma
 | Random Forest | 0,495 | 0,735 | 0,592 | 0,973 | 200 árvores, sem limite de profundidade |
 | SVM (RBF) | 0,402 | 0,779 | 0,530 | 0,951 | C = 100, γ = scale |
 
-Os atributos derivados (potência, diferença de temperatura e desgaste x torque) melhoram o F1 de
-SVM, MLP e Random Forest; o Random Forest vai a 0,718. Com pesos de classe no lugar do SMOTE,
-Random Forest e XGBoost melhoram (0,692 e 0,768) e SVM e MLP pioram.
+Atributos derivados (potência, diferença de temperatura, desgaste x torque) melhoram SVM, MLP e
+Random Forest, que vai a 0,718. Pesos de classe no lugar do SMOTE melhoram Random Forest e
+XGBoost (0,692 e 0,768) e pioram SVM e MLP.
 
-### Clássicos x LLM
+### Experimento extra: prompt melhorado
 
-Amostra fixa de 200 casos do teste (50 falhas). Como ela tem 25% de falhas, a precisão aqui é
-bem maior que no teste completo. Tabela completa em
-[`reports/results/comparison.md`](reports/results/comparison.md).
-
-| Modelo | Configuração | Precisão | Revocação | F1 | AUC-ROC | Tempo/100 | Custo/100 |
-|---|---|---|---|---|---|---|---|
-| SVM | SMOTE | 0,975 | 0,780 | 0,867 | 0,964 | 0,05 s | — |
-| MLP | SMOTE | 0,976 | 0,800 | 0,879 | 0,979 | < 0,01 s | — |
-| XGBoost | SMOTE | 0,976 | 0,800 | 0,879 | 0,973 | < 0,01 s | — |
-| LLM (DeepSeek) | zero-shot | 0,341 | 0,860 | 0,489 | 0,721 | 98 s | US$ 0,005 |
-| LLM (DeepSeek) | few-shot, k=20 | 0,597 | 0,740 | 0,661 | 0,843 | 97 s | US$ 0,024 |
-
-- Com dados rotulados, os clássicos vencem com folga, em uma fração do tempo e sem custo de API.
-- O LLM pega a maior parte das falhas sem nenhum treino, mas gera muitos alarmes falsos.
-### Experimento extra: prompt v2
-
-Tabela em [`comparison_extra.md`](reports/results/extra/comparison_extra.md) e gráfico em
+Tabela em [`comparison_extra.md`](reports/results/extra/comparison_extra.md), gráfico em
 [`extra_f1.png`](reports/figures/extra_f1.png).
 
-- Com exemplos escolhidos por vizinhança e limiar ajustado em validação, só com dados de treino,
-  o `deepseek-chat` vai de 0,66 para 0,78 de F1.
-- Com as regras de falha da documentação no prompt, chega a 0,844. O `deepseek-reasoner` chega a
-  0,864, mas é cerca de 5 vezes mais lento e deu 7 respostas inválidas em 200.
-- As mesmas regras aplicadas direto, sem LLM, dão 0,913: o ganho vem do conhecimento de domínio,
-  não do modelo.
-
-## Tecnologias
-
-Python 3.12, pandas, scikit-learn, imbalanced-learn, XGBoost, matplotlib, seaborn, Jupyter,
-API da DeepSeek (SDK da OpenAI) e [uv](https://docs.astral.sh/uv/) para o ambiente.
+| Variante | F1 | Observação |
+|---|---|---|
+| 10 exemplos vizinhos + limiar ajustado | 0,782 | só dados de treino |
+| regras de falha + vizinhos + limiar (`deepseek-chat`) | 0,844 | usa conhecimento de domínio |
+| regras de falha, zero-shot (`deepseek-reasoner`) | 0,864 | ~5x mais lento, 7 respostas inválidas em 200 |
+| só as regras, sem LLM | 0,913 | referência |
 
 ## Como rodar
 
-O ambiente é gerenciado com [uv](https://docs.astral.sh/uv/). Instale o uv uma vez
-(Windows: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`), depois:
+Ambiente gerenciado com [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv sync                               # cria .venv com Python 3.12 e instala tudo (versões travadas no uv.lock)
+uv sync                                  # Python 3.12 e dependências travadas no uv.lock
 
-uv run python -m src.data              # 1. prepara os conjuntos (treino, teste, amostra fixa)
-uv run python -m src.train_classical   # 2. Etapa I: SVM, MLP, RF, XGBoost
-copy .env.example .env                 # 3. Etapa II: coloque a DEEPSEEK_API_KEY no .env (Linux/Mac: cp)
-uv run python -m src.run_llm --dry-run #    confere o prompt sem chamar a API
-uv run python -m src.run_llm --limit 10 #   teste rápido com 10 casos (não salva nada)
-uv run python -m src.run_llm           #    zero-shot + few-shot 3/5/10/20 na amostra toda
-uv run python -m src.compare           # 4. tabela e gráfico finais
-uv run python -m src.run_llm_extra     # extra: prompt v2 (vizinhos, atributos derivados, regras)
+uv run python -m src.data                # conjuntos de treino, teste e amostra fixa
+uv run python -m src.train_classical     # Etapa I
+cp .env.example .env                     # Etapa II: coloque a DEEPSEEK_API_KEY no .env
+uv run python -m src.run_llm --dry-run   # mostra o prompt sem chamar a API
+uv run python -m src.run_llm             # zero-shot e few-shot 3/5/10/20
+uv run python -m src.run_llm_extra       # experimento extra
+uv run python -m src.compare             # tabela e figuras finais
 
-uv run jupyter lab                     # notebooks
+uv run jupyter lab                       # notebooks
 ```
 
-No VS Code, selecione o interpretador `.venv` da pasta. Para adicionar uma biblioteca: `uv add nome`.
-Com `LLM_PROVIDER=dummy` o passo 3 roda offline e sem custo, útil para testar o pipeline.
+Com `LLM_PROVIDER=dummy` a Etapa II roda offline e sem custo, para testar o pipeline.
 Sem uv: `pip install -r requirements.txt`.
 
 ## Estrutura
 
 ```
-├── data/
-│   ├── raw/ai4i2020.csv        base original (versionada)
-│   └── processed/              conjuntos gerados e cache do LLM (fora do git)
-├── notebooks/
-│   ├── 01_eda_preparacao.ipynb
-│   ├── 02_etapa1_classicos.ipynb
-│   ├── 03_etapa2_llm.ipynb
-│   └── 04_comparacao.ipynb
+├── data/raw/ai4i2020.csv        base original
+├── notebooks/                   EDA, Etapa I, Etapa II e comparação
 ├── src/
-│   ├── config.py               semente, caminhos, tamanhos de amostra
-│   ├── data.py                 carga, limpeza, split, amostra fixa
-│   ├── metrics.py              métricas e gráficos comuns
-│   ├── train_classical.py      Etapa I
-│   ├── run_llm.py              Etapa II
-│   ├── run_llm_extra.py        experimento extra com o prompt v2
-│   ├── compare.py              comparação final
-│   └── llm/
-│       ├── prompts.py          prompt v1 e seleção dos exemplos few-shot
-│       ├── prompts_domain.py   prompt v2: vizinhos, atributos derivados e regras de falha
-│       └── providers.py        clientes DeepSeek / GLM / Claude / OpenAI-compatível
-├── reports/
-│   ├── relatorio.md            relatório técnico (Markdown)
-│   ├── relatorio/              relatório no modelo da SBC (LaTeX e PDF)
-│   ├── figures/                matrizes de confusão, ROC, comparação
-│   ├── results/                métricas (summary.csv), predições e prompts usados; extra/ para o prompt v2
-│   └── slides/                 apresentação
-├── scripts/download_data.py
-├── pyproject.toml              dependências (uv)
-└── uv.lock                     versões travadas
+│   ├── data.py                  carga, limpeza, split e amostra fixa
+│   ├── train_classical.py       Etapa I
+│   ├── run_llm.py               Etapa II
+│   ├── run_llm_extra.py         experimento extra
+│   ├── compare.py               comparação final
+│   ├── metrics.py, config.py
+│   └── llm/                     prompts v1 e v2, clientes de LLM
+└── reports/
+    ├── relatorio/               relatório (LaTeX e PDF, modelo SBC)
+    ├── slides/                  apresentação
+    ├── figures/                 matrizes de confusão, ROC, comparações
+    └── results/                 métricas, predições e prompts usados
 ```
 
 ## Decisões de projeto
 
-- **Sem vazamento:** as colunas TWF, HDF, PWF, OSF e RNF indicam o *tipo* de falha e só existem
-  quando há falha, então foram removidas dos atributos. Normalização e SMOTE rodam dentro do
-  pipeline, ajustados só nos folds de treino.
-- **Métrica principal F1 / revocação**, não acurácia: um modelo que diz "nunca falha" já tem 96,6% de acurácia.
-- **Amostra fixa enriquecida:** chamar um LLM 10.000 vezes por configuração é caro e lento, então a
-  comparação usa 200 casos fixos do teste, com 25% de falhas para que a revocação seja mensurável.
-  Os clássicos são avaliados nessa amostra e também no teste completo.
-- **Reprodutibilidade:** semente fixa (42), prompt versionado, versão do modelo e preços registrados
-  a cada execução, respostas do LLM em cache.
+- **Sem vazamento:** TWF, HDF, PWF, OSF e RNF indicam o *tipo* de falha e só existem quando há
+  falha, então saem dos atributos.
+- **F1 e revocação, não acurácia:** um modelo que responde sempre "normal" já tem 96,6% de acurácia.
+- **Amostra fixa enriquecida:** rodar o LLM nos 2.000 casos de teste por configuração seria caro e
+  lento. A comparação usa 200 casos fixos com 25% de falhas, para a revocação ser mensurável; os
+  clássicos também são avaliados no teste completo.
+- **Comparação justa:** o prompt principal não recebe nenhuma informação que os modelos clássicos
+  não tenham. O que usa conhecimento de domínio fica separado no experimento extra.
 
 ## Referências
 
@@ -160,4 +165,6 @@ Sem uv: `pip install -r requirements.txt`.
 
 ## Autor
 
-Vitor Reis · [GitHub](https://github.com/vitorszreis)
+**Vitor Reis** · Sistemas de Informação, UFJF · [GitHub](https://github.com/vitorszreis)
+
+Trabalho final da disciplina DCC068 Redes Neurais Artificiais (2026/2).
