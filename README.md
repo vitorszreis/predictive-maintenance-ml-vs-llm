@@ -9,13 +9,6 @@
 Comparei SVM, MLP, Random Forest e XGBoost com o DeepSeek classificando por prompt, nos mesmos
 dados, medindo desempenho, tempo e custo.
 
-<<<<<<< HEAD
-*English: classical ML vs. LLM prompting for predictive maintenance (AI4I 2020). Tuned classifiers
-reach F1 0.88; the prompted LLM reaches 0.66, and 0.86 only when the failure rules are written into
-the prompt. The same rules alone score 0.91.*
-=======
->>>>>>> fe2d37fa4753bd65c8a480bb44d266b42f125fc5
-
 ![F1 por abordagem](reports/figures/resumo_f1.png)
 
 ## Principais resultados
