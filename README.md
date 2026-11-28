@@ -7,7 +7,6 @@
 AI4I 2020 dataset, comparing tuned classical models with an LLM used as a zero/few-shot classifier
 on the same fixed test sample, including time and cost per 100 predictions.
 
-Trabalho final da disciplina **DCC068 Redes Neurais Artificiais**, Sistemas de Informação, UFJF (2026/2).
 
 <!-- Quando tiver resultados, coloque aqui a figura principal: -->
 <!-- ![Comparação F1](reports/figures/comparison_f1.png) -->
